@@ -1,0 +1,12 @@
+{
+  "name": "webxr-multiuser-environment",
+  "version": "1.0.0",
+  "description": "multi-user virtual reality",
+  "scripts": {
+    "start": "node ./server/easyrtc-server.js"
+  },
+  "author": "Fisnik Spahija",
+  "dependencies": {
+    "networked-aframe": "^0.10.0"
+  }
+}
