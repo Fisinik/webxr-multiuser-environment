@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>360 Image of University of Prishtina</title>
+    <meta name="description" content="360 Image of University of Prishtina" />
+
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.5.0/socket.io.slim.js"></script>
+    <script src="/easyrtc/easyrtc.js"></script>
+    <script src="/dist/networked-aframe.js"></script>
+
+    <script src="https://unpkg.com/aframe-event-set-component@5/dist/aframe-event-set-component.min.js"></script>
+    <script src="https://unpkg.com/aframe-layout-component@5.3.0/dist/aframe-layout-component.min.js"></script>
+    <script src="https://unpkg.com/aframe-template-component@3.2.1/dist/aframe-template-component.min.js"></script>
+    <script src="https://unpkg.com/aframe-proxy-event-component@2.1.0/dist/aframe-proxy-event-component.min.js"></script>
+    <script>
+      NAF.schemas.getComponentsOriginal = NAF.schemas.getComponents;
+      NAF.schemas.getComponents = (template) => {
+        if (!NAF.schemas.hasTemplate('#avatar-template')) {
+          NAF.schemas.add({
+            template: '#avatar-template',
+            components: [
+              'position',
+              'rotation',
+              {
+                selector: '.head',
+                component: 'material',
+                property: 'color'
+              }
+            ]
+          });
+        }
+        const components = NAF.schemas.getComponentsOriginal(template);
+        return components;
+      };
+    </script>
+    <!-- Randomize color of avatar's head -->
+    <script src="https://unpkg.com/aframe-randomizer-components@^3.0.1/dist/aframe-randomizer-components.min.js"></script>
+    <!-- Stops spawning on top of eachother -->
+    <script src="/js/spawn-in-circle.component.js"></script>
+
+    <!-- Image link template to be reused. -->
+    <script id="link" type="text/html">
+      <a-entity class="link"
+        geometry="primitive: plane; height: 1; width: 1"
+        material="shader: flat; src: ${thumb}"
+        event-set__mouseenter="scale: 1.2 1.2 1"
+        event-set__mouseleave="scale: 1 1 1"
+        event-set__click="_target: #image-360; _delay: 300; material.src: ${src}"
+        proxy-event="event: click; to: #image-360; as: fade"
+        sound="on: click; src: #click-sound"></a-entity>
+    </script>
+  </head>
+  <body>
+    <a-scene
+      networked-scene="
+      room: 360;
+      debug: true;
+      adapter: wseasyrtc;
+    "
+    >
+      <a-assets>
+        <!-- Templates -->
+
+        <!-- Avatar -->
+        <template id="avatar-template">
+          <a-entity class="avatar">
+            <a-sphere class="head" scale="0.45 0.5 0.4"></a-sphere>
+            <a-entity class="face" position="0 0.05 0">
+              <a-sphere class="eye" color="#efefef" position="0.16 0.1 -0.35" scale="0.12 0.12 0.12">
+                <a-sphere class="pupil" color="#000" position="0 0 -1" scale="0.2 0.2 0.2"></a-sphere>
+              </a-sphere>
+              <a-sphere class="eye" color="#efefef" position="-0.16 0.1 -0.35" scale="0.12 0.12 0.12">
+                <a-sphere class="pupil" color="#000" position="0 0 -1" scale="0.2 0.2 0.2"></a-sphere>
+              </a-sphere>
+            </a-entity>
+          </a-entity>
+        </template>
+        <!-- /Avatar -->
+
+        <img id="hall-thumb" crossorigin="anonymous" src="img/faculty-hall.jpg">
+        <img id="amphitheater-thumb" crossorigin="anonymous" src="img/amphitheater.jpg">
+        <img id="exterior-thumb" crossorigin="anonymous" src="img/exterior.jpg">
+        <img id="faculty-hall-pano" crossorigin="anonymous" src="img/faculty-hall-pano.jpg">
+        <img id="amphitheater-pano" crossorigin="anonymous" src="img/amphitheater-pano.jpeg">
+        <img id="exterior-pano" crossorigin="anonymous" src="img/exterior-pano.jpg">
+        
+        <audio id="click-sound" crossorigin="anonymous" src="https://cdn.aframe.io/360-image-gallery-boilerplate/audio/click.ogg"></audio>
+        <!-- /Templates -->
+      </a-assets>
+
+      
+        <a-entity
+          id="player"
+          networked="template:#avatar-template;attachTemplateToLocal:false;"
+          camera
+          position="0 1.6 0"
+          spawn-in-circle="radius:3"
+          wasd-controls
+          look-controls
+        >
+          <a-cursor
+          id="cursor"
+          animation__click="property: scale; startEvents: click; from: 0.1 0.1 0.1; to: 1 1 1; dur: 150"
+          animation__fusing="property: fusing; startEvents: fusing; from: 1 1 1; to: 0.1 0.1 0.1; dur: 1500"
+          event-set__mouseenter="_event: mouseenter; color: springgreen"
+          event-set__mouseleave="_event: mouseleave; color: black"
+          raycaster="objects: .link"></a-cursor>
+          <a-sphere class="head" visible="false" random-color></a-sphere>
+        </a-entity>
+      
+
+      
+      <!-- Panorama image -->
+      <a-sky src="#faculty-hall-pano" id="image-360" radius="10" 
+        animation__fade="property: components.material.material.color; type: color; from: #FFF; to: #000; dur: 300; startEvents: fade"
+        animation__fadeback="property: components.material.material.color; type: color; from: #000; to: #FFF; dur: 300; startEvents: animationcomplete__fade"
+      >
+      </a-sky>
+
+      <!-- Image links. -->
+      <a-entity id="links" layout="type: line; margin: 1.5" position="0 -1 -4">
+        <a-entity template="src: #link" data-src="#amphitheater-pano" data-thumb="#amphitheater-thumb"></a-entity>
+        <a-entity template="src: #link" data-src="#faculty-hall-pano" data-thumb="#hall-thumb"></a-entity>
+        <a-entity template="src: #link" data-src="#exterior-pano" data-thumb="#exterior-thumb"></a-entity>
+      </a-entity>
+
+    </a-scene>
+
+    <script>
+      // Called by Networked-Aframe when connected to server
+      function onConnect() {
+        console.log('onConnect', new Date());
+      }
+    </script>
+  </body>
+</html>
